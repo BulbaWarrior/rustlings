@@ -18,8 +18,6 @@
 // - The output element is going to be a Vector of strings.
 // Execute `rustlings hint quiz2` or use the `hint` watch subcommand for a hint.
 
-// I AM NOT DONE
-
 pub enum Command {
     Uppercase,
     Trim,
@@ -27,15 +25,25 @@ pub enum Command {
 }
 
 mod my_module {
+
     use super::Command;
 
     // TODO: Complete the function signature!
-    pub fn transformer(input: ???) -> ??? {
+    pub fn transformer(input: Vec<(&str, Command)>) -> Vec<String> {
         // TODO: Complete the output declaration!
-        let mut output: ??? = vec![];
-        for (string, command) in input.iter() {
-            // TODO: Complete the function body. You can do it!
-        }
+        // let mut output: Vec<String> = vec![];
+        let output: Vec<String> = input
+            .iter()
+            .map(|(string, command)| match command {
+                Command::Uppercase => string.to_uppercase(),
+                Command::Trim => string.trim().to_owned(),
+                Command::Append(n) => {
+                    let mut appended = string.to_string();
+                    appended.push_str(&"bar".repeat(*n));
+                    appended
+                }
+            })
+            .collect();
         output
     }
 }
@@ -43,8 +51,8 @@ mod my_module {
 #[cfg(test)]
 mod tests {
     // TODO: What to we have to import to have `transformer` in scope?
-    use ???;
     use super::Command;
+    use my_module::transformer;
 
     #[test]
     fn it_works() {
