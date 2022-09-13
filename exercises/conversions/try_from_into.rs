@@ -5,7 +5,10 @@
 // You can read more about it at https://doc.rust-lang.org/std/convert/trait.TryFrom.html
 // Execute `rustlings hint try_from_into` or use the `hint` watch subcommand for a hint.
 
-use std::convert::{TryFrom, TryInto};
+use std::{
+    convert::{TryFrom, TryInto},
+    num::TryFromIntError,
+};
 
 #[derive(Debug, PartialEq)]
 struct Color {
@@ -14,6 +17,11 @@ struct Color {
     blue: u8,
 }
 
+impl Color {
+    fn new(red: u8, green: u8, blue: u8) -> Color {
+        Color { red, green, blue }
+    }
+}
 // We will use this error type for these `TryFrom` conversions.
 #[derive(Debug, PartialEq)]
 enum IntoColorError {
@@ -23,7 +31,11 @@ enum IntoColorError {
     IntConversion,
 }
 
-// I AM NOT DONE
+impl From<TryFromIntError> for IntoColorError {
+    fn from(_: TryFromIntError) -> Self {
+        Self::IntConversion
+    }
+}
 
 // Your task is to complete this implementation
 // and return an Ok result of inner type Color.
@@ -33,11 +45,14 @@ enum IntoColorError {
 // Note that the implementation for tuple and array will be checked at compile time,
 // but the slice implementation needs to check the slice length!
 // Also note that correct RGB color values must be integers in the 0..=255 range.
-
 // Tuple implementation
 impl TryFrom<(i16, i16, i16)> for Color {
     type Error = IntoColorError;
     fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {
+        let (r, g, b) = tuple;
+        let (r, g, b): (u8, u8, u8) = (r.try_into()?, g.try_into()?, b.try_into()?);
+
+        Ok(Color::new(r, g, b))
     }
 }
 
@@ -45,6 +60,12 @@ impl TryFrom<(i16, i16, i16)> for Color {
 impl TryFrom<[i16; 3]> for Color {
     type Error = IntoColorError;
     fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {
+        let vals: Result<Vec<u8>, _> = arr.into_iter().map(|&x| x.try_into()).collect();
+        if let &[r, g, b] = vals?.as_slice() {
+            Ok(Color::new(r, g, b))
+        } else {
+            unreachable!()
+        }
     }
 }
 
@@ -52,6 +73,11 @@ impl TryFrom<[i16; 3]> for Color {
 impl TryFrom<&[i16]> for Color {
     type Error = IntoColorError;
     fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {
+        let vals: Result<Vec<u8>, _> = slice.into_iter().map(|&x| x.try_into()).collect();
+        match vals?.as_slice() {
+            &[r, g, b] => Ok(Color::new(r, g, b)),
+            _ => Err(IntoColorError::BadLen),
+        }
     }
 }
 
